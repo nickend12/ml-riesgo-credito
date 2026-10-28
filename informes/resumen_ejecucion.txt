@@ -1,0 +1,40 @@
+==================================================
+INFORME DE EJECUCIÓN AUTOMÁTICA DEL PIPELINE DE ML
+==================================================
+Fecha y Hora de Ejecución: 2026-10-28 02:57:55
+Duración Total: 7.79 segundos
+
+1. DATOS E INGESTA
+------------------
+Dataset Fuente: imodels/credit-card (Hugging Face)
+Filas Ingestadas: 24000
+Columnas Totales: 34
+
+2. PREPROCESAMIENTO Y DIVISIÓN
+------------------------------
+Muestras de Entrenamiento (Train): 19180
+Muestras de Prueba (Test): 4795
+Variables Predictoras (X): 33
+Escalado: StandardScaler (Fit en Train, Transform en Test - Sin Leakage)
+
+3. MODELO Y HIPERPARÁMETROS
+---------------------------
+Algoritmo: Random Forest Classifier
+n_estimators: 100
+max_depth: 10
+random_state: 42
+
+4. MÉTRICAS DE EVALUACIÓN (TEST SET)
+-----------------------------------
+Exactitud (Accuracy):   0.8184
+Precisión (Precision):   0.6758
+Sensibilidad (Recall):   0.3487
+Puntuación F1 (F1-Score): 0.4600
+
+Artefactos Generados Automáticamente:
+- Gráfica Matriz de Confusión: informes/matriz_confusion.png
+- Informe TXT de Ejecución: informes/resumen_ejecucion.txt
+- Análisis de Hallazgos MD: informes/hallazgos.md
+
+Status: PIPELINE EJECUTADO CON ÉXITO
+==================================================
