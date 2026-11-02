@@ -11,3 +11,4 @@ datos/processed/*
 .ipynb_checkpoints/
 .env
 .DS_Store
+informes/modelo_riesgo.joblib

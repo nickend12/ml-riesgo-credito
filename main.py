@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+import joblib
 from src.ingesta import cargar_datos_huggingface
 from src.preprocesamiento import preprocesar_datos
 from src.modelo import comparar_configuraciones, entrenar_modelo_random_forest
@@ -93,6 +94,22 @@ def ejecutar_pipeline():
         max_depth=max_depth, 
         random_state=random_state
     )
+
+    # Guardar modelo y transformador para el simulador interactivo local.
+    df_para_defaults = df_raw.drop_duplicates().dropna()
+    columnas_modelo = list(X_train.columns)
+    target_col = "default.payment.next.month"
+    defaults = (
+        df_para_defaults.drop(columns=[target_col], errors="ignore")
+        .reindex(columns=columnas_modelo)
+        .median()
+        .to_dict()
+    )
+    os.makedirs("informes", exist_ok=True)
+    joblib.dump(
+        {"model": modelo, "scaler": scaler, "features": columnas_modelo, "defaults": defaults},
+        "informes/modelo_riesgo.joblib",
+    )
     
     # 5. Evaluación y Cálculo de Métricas
     metricas = evaluar_modelo(modelo, X_test, y_test, output_dir="informes")
@@ -173,6 +190,7 @@ Puntuación F1 (F1-Score): {metricas['f1']:.4f}
 
 Artefactos Generados Automáticamente:
 - Gráfica Matriz de Confusión: informes/matriz_confusion.png
+- Modelo para simulador: informes/modelo_riesgo.joblib
 - Informe TXT de Ejecución: informes/resumen_ejecucion.txt
 - Análisis de Hallazgos MD: informes/hallazgos.md
 

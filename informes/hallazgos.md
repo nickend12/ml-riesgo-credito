@@ -1,6 +1,6 @@
 # 📊 Informe de Hallazgos y Análisis del Modelo de Riesgo de Crédito
 
-> **Nota:** Este informe fue generado **automáticamente por el pipeline de ML** el 2026-11-02 a las 16:48:39.
+> **Nota:** Este informe fue generado **automáticamente por el pipeline de ML** el 2026-11-02 a las 17:07:55.
 
 ## 1. Resumen Ejecutivo
 **Pregunta de negocio:** ¿Qué clientes tienen una alta probabilidad de incurrir en mora el próximo mes para priorizar aprobación, mitigación de cupo o cobranza preventiva?

@@ -153,6 +153,21 @@ pip install -r requirements.txt
 python main.py
 ```
 
+### Simulador interactivo en tiempo real
+
+Después de ejecutar el pipeline, inicia la aplicación local:
+
+```bash
+streamlit run app.py
+```
+
+La aplicación permite ingresar los datos de un cliente y consultar la probabilidad
+estimada de mora. Revisa cada dos segundos los archivos generados en `informes/`;
+al volver a ejecutar `python main.py`, recarga automáticamente el modelo, las
+métricas y el resumen mostrado en pantalla. También muestra una gráfica de barras
+con las métricas actuales, la matriz de confusión y un gráfico de líneas con los
+cambios observados entre ejecuciones durante la sesión.
+
 ### 5. Ejecución individual de módulos (pruebas unitarias)
 
 ```bash
