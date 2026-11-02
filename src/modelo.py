@@ -1,5 +1,7 @@
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import f1_score, recall_score
+from sklearn.model_selection import train_test_split
 
 
 def entrenar_modelo_random_forest(
@@ -30,6 +32,39 @@ def entrenar_modelo_random_forest(
     print("✅ Modelo entrenado exitosamente con el conjunto de entrenamiento.\n")
     
     return modelo
+
+
+def comparar_configuraciones(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    configuraciones: list[dict],
+    random_state: int = 42,
+) -> list[dict]:
+    """Compara configuraciones usando una validación interna del train."""
+    X_subtrain, X_validacion, y_subtrain, y_validacion = train_test_split(
+        X_train,
+        y_train,
+        test_size=0.2,
+        random_state=random_state,
+        stratify=y_train,
+    )
+    resultados = []
+    for configuracion in configuraciones:
+        modelo = entrenar_modelo_random_forest(
+            X_subtrain,
+            y_subtrain,
+            random_state=random_state,
+            **configuracion,
+        )
+        predicciones = modelo.predict(X_validacion)
+        resultados.append(
+            {
+                **configuracion,
+                "recall": recall_score(y_validacion, predicciones, zero_division=0),
+                "f1": f1_score(y_validacion, predicciones, zero_division=0),
+            }
+        )
+    return resultados
 
 
 if __name__ == "__main__":

@@ -1,9 +1,11 @@
 # 📊 Informe de Hallazgos y Análisis del Modelo de Riesgo de Crédito
 
-> **Nota:** Este informe fue generado **automáticamente por el pipeline de ML** el 2026-10-28 a las 02:57:55.
+> **Nota:** Este informe fue generado **automáticamente por el pipeline de ML** el 2026-11-02 a las 16:48:39.
 
 ## 1. Resumen Ejecutivo
-Este documento analiza el desempeño del modelo **Random Forest Classifier** entrenado sobre el dataset `imodels/credit-card`. El objetivo es optimizar la toma de decisiones financieras en la aprobación de crédito, equilibrando la mitigación del riesgo con el crecimiento de la cartera.
+**Pregunta de negocio:** ¿Qué clientes tienen una alta probabilidad de incurrir en mora el próximo mes para priorizar aprobación, mitigación de cupo o cobranza preventiva?
+
+Este documento analiza el desempeño del modelo **Random Forest Classifier** entrenado sobre el dataset `imodels/credit-card`. El modelo identifica algunas señales de riesgo, pero no debe automatizar por sí solo el rechazo de clientes porque su recall de mora es limitado.
 
 ---
 
@@ -11,14 +13,16 @@ Este documento analiza el desempeño del modelo **Random Forest Classifier** ent
 
 | Métrica | Valor Calculado | Interpretación de Negocio |
 | :--- | :--- | :--- |
-| **Accuracy (Exactitud)** | **81.84%** | Clasificación correcta general (cumplidos y morosos). |
-| **Precision (Precisión)** | **67.58%** | De las alarmas de mora emitidas, este porcentaje realmente cayó en mora. |
-| **Recall (Sensibilidad)** | **34.87%** | Porcentaje total de clientes en mora capturados por el modelo. |
-| **F1-Score** | **46.00%** | Balance armónico entre Precisión y Sensibilidad. |
+| **Accuracy (Exactitud)** | **81.69%** | Clasificación correcta general (cumplidos y morosos). |
+| **Precision (Precisión)** | **67.10%** | De las alarmas de mora emitidas, este porcentaje realmente cayó en mora. |
+| **Recall (Sensibilidad)** | **34.30%** | Porcentaje total de clientes en mora capturados por el modelo. |
+| **F1-Score** | **45.40%** | Balance armónico entre Precisión y Sensibilidad. |
 
 ---
 
 ## 3. Matriz de Confusión y Análisis del Error Financiero
+
+En la prueba, el modelo obtuvo **365 verdaderos positivos** y dejó **699 falsos negativos**: detectó una parte de los clientes que cayeron en mora, pero omitió otra parte relevante.
 
 ### A. Falsos Negativos (FN) — *El Riesgo Crítico*
 * **Definición:** El modelo clasificó al cliente como **Cumplido (0)**, pero en la realidad **cayó en mora (1)**.

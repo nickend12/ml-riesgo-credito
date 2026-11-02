@@ -1,35 +1,64 @@
 ==================================================
 INFORME DE EJECUCIÓN AUTOMÁTICA DEL PIPELINE DE ML
 ==================================================
-Fecha y Hora de Ejecución: 2026-10-28 02:57:55
-Duración Total: 7.79 segundos
+Fecha y Hora de Ejecución: 2026-11-02 16:48:39
+Duración Total: 11.86 segundos
+
+PREGUNTA DE NEGOCIO
+-------------------
+¿Qué clientes tienen alta probabilidad de incurrir en mora el próximo mes
+para priorizar aprobación, mitigación de cupo o cobranza preventiva?
 
 1. DATOS E INGESTA
 ------------------
 Dataset Fuente: imodels/credit-card (Hugging Face)
 Filas Ingestadas: 24000
 Columnas Totales: 34
+Split/configuración: train
+Columnas y tipos:
+limit_bal (float64), age (float64), pay_0 (float64), pay_2 (float64), pay_3 (float64), pay_4 (float64), pay_5 (float64), pay_6 (float64), bill_amt1 (float64), bill_amt2 (float64), bill_amt3 (float64), bill_amt4 (float64), bill_amt5 (float64), bill_amt6 (float64), pay_amt1 (float64), pay_amt2 (float64), pay_amt3 (float64), pay_amt4 (float64), pay_amt5 (float64), pay_amt6 (float64), sex:1 (float64), sex:2 (float64), education:0 (float64), education:1 (float64), education:2 (float64), education:3 (float64), education:4 (float64), education:5 (float64), education:6 (float64), marriage:0 (float64), marriage:1 (float64), marriage:2 (float64), marriage:3 (float64), default.payment.next.month (int64)
+Muestra de 3 registros:
+ limit_bal  age  pay_0  pay_2  pay_3  pay_4  pay_5  pay_6  bill_amt1  bill_amt2  bill_amt3  bill_amt4  bill_amt5  bill_amt6  pay_amt1  pay_amt2  pay_amt3  pay_amt4  pay_amt5  pay_amt6  sex:1  sex:2  education:0  education:1  education:2  education:3  education:4  education:5  education:6  marriage:0  marriage:1  marriage:2  marriage:3  default.payment.next.month
+   80000.0 24.0    0.0    0.0    0.0    0.0    0.0    0.0    75125.0    77353.0    78321.0    73731.0    39643.0    39457.0    3503.0    5001.0    2092.0    1218.0    1445.0     878.0    0.0    1.0          0.0          0.0          1.0          0.0          0.0          0.0          0.0         0.0         0.0         1.0         0.0                           0
+   30000.0 28.0    0.0    0.0    0.0    0.0    0.0    0.0    29242.0    29507.0    29155.0    25255.0    22001.0        0.0    5006.0    1244.0     851.0     955.0       0.0       0.0    1.0    0.0          0.0          0.0          1.0          0.0          0.0          0.0          0.0         0.0         0.0         1.0         0.0                           0
+  180000.0 44.0    0.0    0.0   -1.0   -1.0   -1.0   -1.0    20916.0        0.0      850.0        0.0     6881.0    10340.0       0.0     850.0       0.0    6881.0   10340.0     182.0    0.0    1.0          0.0          0.0          0.0          0.0          0.0          1.0          0.0         0.0         1.0         0.0         0.0                           0
 
 2. PREPROCESAMIENTO Y DIVISIÓN
 ------------------------------
+Nulos iniciales: 0
+Duplicados iniciales: 25
+Filas después de limpieza: 23975
 Muestras de Entrenamiento (Train): 19180
 Muestras de Prueba (Test): 4795
 Variables Predictoras (X): 33
-Escalado: StandardScaler (Fit en Train, Transform en Test - Sin Leakage)
+Distribución de clases en test: clase 0=77.81%, clase 1=22.19%
+Escalado: StandardScaler (fit en Train, transform en Test - Sin Leakage).
+Aunque Random Forest no requiere escalado, se conserva para dejar las variables
+en una escala comparable y mantener un pipeline reproducible.
+Muestra de predictoras después del escalado (primeras 3 filas de train):
+ limit_bal   age  pay_0  pay_2  pay_3  pay_4  pay_5  pay_6  bill_amt1  bill_amt2  bill_amt3  bill_amt4  bill_amt5  bill_amt6  pay_amt1  pay_amt2  pay_amt3  pay_amt4  pay_amt5  pay_amt6  sex:1  sex:2  education:0  education:1  education:2  education:3  education:4  education:5  education:6  marriage:0  marriage:1  marriage:2  marriage:3
+     0.253  0.16 -1.749 -1.554 -1.533 -1.521 -1.528 -1.483     -0.636     -0.567     -0.602     -0.657     -0.623     -0.648     0.167    -0.048    -0.224    -0.162    -0.298    -0.296 -0.808  0.808       -0.022       -0.735       -0.934        2.223       -0.063       -0.094       -0.042      -0.045      -0.919       0.944      -0.107
+    -0.901 -1.03  0.015  0.103  0.136  0.182  0.227  0.249     -0.188     -0.146     -0.106     -0.112     -0.148     -0.362    -0.212    -0.158     0.149     1.508    -0.206    -0.227 -0.808  0.808       -0.022        1.360       -0.934       -0.450       -0.063       -0.094       -0.042      -0.045      -0.919       0.944      -0.107
+    -0.055 -1.03 -0.867 -0.726 -0.699  0.182 -0.650  0.249     -0.673     -0.670     -0.601     -0.604     -0.510     -0.486    -0.257    -0.046    -0.226     0.247    -0.182    -0.085  1.237 -1.237       -0.022       -0.735        1.070       -0.450       -0.063       -0.094       -0.042      -0.045      -0.919       0.944      -0.107
 
 3. MODELO Y HIPERPARÁMETROS
 ---------------------------
 Algoritmo: Random Forest Classifier
 n_estimators: 100
-max_depth: 10
+max_depth: 15
 random_state: 42
+Comparación en validación interna del train:
+- n_estimators=50, max_depth=8: recall=0.3702, F1=0.4895
+- n_estimators=100, max_depth=10: recall=0.3866, F1=0.4981
+- n_estimators=100, max_depth=15: recall=0.3890, F1=0.5011
+Configuración elegida: {'n_estimators': 100, 'max_depth': 15}
 
 4. MÉTRICAS DE EVALUACIÓN (TEST SET)
 -----------------------------------
-Exactitud (Accuracy):   0.8184
-Precisión (Precision):   0.6758
-Sensibilidad (Recall):   0.3487
-Puntuación F1 (F1-Score): 0.4600
+Exactitud (Accuracy):   0.8169
+Precisión (Precision):   0.6710
+Sensibilidad (Recall):   0.3430
+Puntuación F1 (F1-Score): 0.4540
 
 Artefactos Generados Automáticamente:
 - Gráfica Matriz de Confusión: informes/matriz_confusion.png
