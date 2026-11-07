@@ -9,6 +9,7 @@ def entrenar_modelo_random_forest(
     y_train: pd.Series, 
     n_estimators: int = 100, 
     max_depth: int = 10, 
+    class_weight: str | dict | None = "balanced",
     random_state: int = 42
 ) -> RandomForestClassifier:
     """
@@ -17,12 +18,16 @@ def entrenar_modelo_random_forest(
     """
     print("--- INICIANDO ENTRENAMIENTO DEL MODELO ---")
     print("Algoritmo seleccionado: Random Forest Classifier (Supervisado)")
-    print(f"Hiperparámetros: n_estimators={n_estimators}, max_depth={max_depth}, random_state={random_state}")
+    print(
+        f"Hiperparámetros: n_estimators={n_estimators}, max_depth={max_depth}, "
+        f"class_weight={class_weight}, random_state={random_state}"
+    )
     
     # Inicializar el modelo con semilla aleatoria fija
     modelo = RandomForestClassifier(
         n_estimators=n_estimators,
         max_depth=max_depth,
+        class_weight=class_weight,
         random_state=random_state,
         n_jobs=-1
     )

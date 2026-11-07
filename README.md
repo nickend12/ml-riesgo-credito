@@ -14,7 +14,7 @@ Este repositorio contiene un pipeline modular y automatizado de Machine Learning
 ## 🎯 0. Pregunta de Negocio y Dataset
 
 ### Pregunta de Negocio Formulada
-> **¿Qué clientes tienen una alta probabilidad de incurrir en mora el próximo mes, para que el área de riesgos priorice la aprobación, la mitigación del cupo o la cobranza preventiva?**
+> **¿Qué clientes titulares de tarjetas de crédito tienen una alta probabilidad de incumplir el pago del próximo mes, según su historial de pagos, saldos facturados, montos pagados y límite de crédito, para que el área de riesgos priorice la aprobación, la mitigación del cupo o la cobranza preventiva?**
 
 * **¿Quién se beneficia?:** La Vicepresidencia de Riesgos, el Área de Crédito y la Gerencia de Cobranzas de la institución financiera.
 * **¿Qué decisión apoya?:**
@@ -94,10 +94,10 @@ En la ejecución del conjunto de prueba (4.795 muestras no vistas durante el ent
 
 | Métrica | Valor obtenido | Interpretación de negocio |
 | :--- | :---: | :--- |
-| **Accuracy (Exactitud)** | **81,69 %** | Clasificación correcta general de clientes cumplidos y morosos. |
-| **Precision (Precisión)** | **67,10 %** | De cada 100 clientes marcados con riesgo de mora, aproximadamente 67 realmente incurrieron en impago. |
-| **Recall (Sensibilidad)** | **34,30 %** | Porcentaje de clientes morosos reales detectados a tiempo por el modelo. |
-| **F1-Score** | **45,40 %** | Balance armónico entre la precisión y la sensibilidad frente a la clase minoritaria. |
+| **Accuracy (Exactitud)** | **79,37 %** | Clasificación correcta general de clientes cumplidos y morosos. |
+| **Precision (Precisión)** | **53,46 %** | De cada 100 clientes marcados con riesgo de mora, aproximadamente 53 realmente incurrieron en impago. |
+| **Recall (Sensibilidad)** | **54,51 %** | Porcentaje de clientes morosos reales detectados a tiempo por el modelo. |
+| **F1-Score** | **53,98 %** | Balance armónico entre la precisión y la sensibilidad frente a la clase minoritaria. |
 
 ### Análisis Financiero de la Matriz de Confusión
 
@@ -203,3 +203,76 @@ El archivo [`.github/workflows/ml_pipeline.yml`](.github/workflows/ml_pipeline.y
 La ejecución final publicada en GitHub Actions terminó correctamente y dejó disponible el artefacto `ml-reports`:
 
 [Ver ejecución exitosa del workflow](https://github.com/nickend12/ml-riesgo-credito/actions/runs/40628689613)
+
+## ✅ 6. Respuesta a la pregunta de negocio
+
+### Respuesta ejecutiva
+
+Los clientes que deben priorizarse son aquellos cuya combinación de historial de
+pagos (`pay_0` a `pay_6`), saldos facturados, montos pagados, límite de crédito y
+variables complementarias produce una probabilidad estimada alta de mora. El
+notebook no identifica a una persona por su nombre: asigna una probabilidad
+individual a cada registro evaluado y ordena los casos desde el mayor al menor
+riesgo.
+
+### 1. Evidencia del análisis de datos
+
+La exploración muestra que la mora es un evento minoritario, pero cuenta con
+señales observables en el comportamiento financiero anterior: atrasos de pago,
+relación entre facturación y pagos realizados, y uso del límite de crédito. Por
+eso, la pregunta se aborda con las variables de comportamiento y capacidad de
+pago, no con una sola característica demográfica. La proporción de mora
+observada en el dataset es **22,18 %**.
+
+### 2. Evidencia de la creación del modelo
+
+Se entrenó un `RandomForestClassifier` con división estratificada y sin fuga de
+información. Sobre 4.795 clientes no vistos, el modelo obtuvo:
+
+* **Accuracy:** 79,37 %
+* **Precision:** 53,46 %; aproximadamente 53 de cada 100 alertas corresponden a
+  clientes que realmente incurrieron en mora.
+* **Recall:** 54,51 %; detecta más de la mitad de los morosos, aunque todavía
+  deja casos sin alertar.
+* **ROC-AUC:** 77,38 %, lo que confirma capacidad para ordenar los casos por
+  riesgo mejor que una clasificación aleatoria.
+
+El modelo utiliza `class_weight='balanced'` para compensar el desbalance entre
+clientes cumplidos y morosos. Esto reduce ligeramente la exactitud general, pero
+mejora la detección de la clase minoritaria: el recall sube de 34,30 % a 54,51 %
+y el F1-score de 45,40 % a 53,98 %. Para la cobranza preventiva, esta mejora es
+más relevante que maximizar únicamente la exactitud. Aun así, el modelo no es un
+filtro perfecto ni debe decidir por sí solo la aprobación o el rechazo de un cliente.
+
+### 3. Aplicación de la predicción
+
+Para cada cliente, el notebook calcula `probabilidad_mora`, asigna una prioridad y
+propone una acción:
+
+| Probabilidad estimada | Prioridad | Acción recomendada |
+| :---: | :---: | :--- |
+| Menor a 30 % | Baja | Seguimiento normal |
+| 30 % a menor de 50 % | Media | Monitoreo y seguimiento |
+| 50 % a menor de 70 % | Alta | Revisión adicional y contacto preventivo |
+| 70 % o más | Muy alta | Contacto prioritario y revisión humana |
+
+Con el umbral técnico de **50 %**, los registros que superan ese valor generan
+una alerta preventiva. En la aplicación Streamlit se puede ingresar la información
+de un cliente y obtener su probabilidad estimada de mora para apoyar la decisión
+del área de riesgos.
+
+### Respuesta en palabras
+
+En palabras, los clientes que deben priorizarse son los **titulares de tarjetas
+de crédito cuya probabilidad individual de incumplir el próximo pago es alta**.
+El modelo identifica estos casos a partir de atrasos en el historial de pagos,
+saldos pendientes elevados, pagos bajos frente a las facturas y un uso alto del
+límite de crédito.
+
+Por lo tanto, los clientes con riesgo alto deben recibir cobranza preventiva y
+una revisión humana del cupo o de sus condiciones. Los clientes con riesgo bajo
+pueden continuar con el proceso normal, mientras que los casos intermedios deben
+mantenerse bajo seguimiento. El modelo ayuda a decidir **a quién atender
+primero**, pero no afirma que un grupo completo vaya a incumplir ni debe
+reemplazar la decisión humana o utilizarse para rechazar automáticamente a un
+cliente.
