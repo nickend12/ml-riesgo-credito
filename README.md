@@ -26,13 +26,14 @@ Este repositorio contiene un pipeline modular y automatizado de Machine Learning
 * **Dataset fuente:** [`imodels/credit-card`](https://huggingface.co/datasets/imodels/credit-card), hospedado en Hugging Face Hub.
 * **Volumen:** 24.000 registros iniciales y 34 columnas en la configuración `train`; después de eliminar 25 duplicados quedan 23.975 registros.
 * **Variable objetivo (`target`):** `default.payment.next.month` (0 = cumplió con el pago, 1 = incurrió en mora).
-* **Justificación del Dataset:** Permite responder la pregunta de negocio porque reúne el historial real de comportamiento de pago (`PAY_0` a `PAY_6`), montos de facturación (`BILL_AMT`) y montos pagados (`PAY_AMT`), capturando la dinámica financiera previa al impago.
+* **Variables relevantes:** `pay_0` a `pay_6` representan el historial de pagos; `bill_amt1` a `bill_amt6`, los montos facturados; y `pay_amt1` a `pay_amt6`, los montos pagados. También se incluyen `limit_bal`, `age` y variables binarias de sexo, educación y estado civil.
+* **Justificación del Dataset:** Permite responder la pregunta de negocio porque reúne el historial de comportamiento de pago, los montos facturados y los montos pagados de cada cliente, capturando señales financieras previas al impago. El dataset ya entrega las variables categóricas codificadas como indicadores binarios, por lo que no se requiere una codificación adicional.
 
 ---
 
 ## 🧠 1. Preprocesamiento y Control de Data Leakage
 
-* **Limpieza y Deduplicación:** Se eliminaron 25 filas duplicadas. No se encontraron valores nulos ni variables categóricas que requirieran codificación; las 33 predictoras son numéricas.
+* **Limpieza y Deduplicación:** Se eliminaron 25 filas duplicadas. No se encontraron valores nulos; las 33 predictoras son numéricas y las variables categóricas ya vienen representadas mediante indicadores binarios (`sex:*`, `education:*` y `marriage:*`).
 * **División de Datos (Train/Test Split):** Se realizó una separación estratificada del 80% para entrenamiento (19.180 muestras) y 20% para prueba (4.795 muestras), preservando la proporción original de la clase objetivo.
 * **Control de Data Leakage:** La estandarización con `StandardScaler` ajustó sus parámetros (`fit_transform`) exclusivamente sobre el conjunto de entrenamiento y aplicó la transformación (`transform`) sobre el conjunto de prueba. Aunque Random Forest no requiere escalado para separar nodos, se conserva para dejar las variables en una escala comparable y mantener un pipeline reproducible; no cambia el criterio de división del árbol.
 * **Evidencia reproducible:** El resumen generado en [`informes/resumen_ejecucion.txt`](informes/resumen_ejecucion.txt) contiene el esquema y tipos, una muestra del DataFrame, nulos y duplicados antes/después, distribución de clases y comparación de configuraciones.
@@ -59,7 +60,7 @@ Random Forest es un algoritmo de ensamble basado en múltiples Árboles de Decis
 * **Selección de configuración:** Se compararon `n_estimators` 50/100 y `max_depth` 8/10/15 mediante una validación estratificada interna del conjunto de entrenamiento. La prueba final se reservó para evaluar una sola vez la configuración elegida.
 
 ### Ventajas y Limitaciones
-* **Ventajas:** Alta precisión, gran resistencia al sobreajuste, capacidad de capturar relaciones no lineales y evaluación de importancia de variables.
+* **Ventajas:** Buen desempeño general, resistencia al sobreajuste frente a un árbol individual, capacidad de capturar relaciones no lineales y evaluación de importancia de variables.
 * **Limitaciones:** Mayor consumo de memoria RAM en comparación con un solo árbol y menor interpretabilidad directa frente a modelos lineales.
 
 ---
