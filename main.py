@@ -17,9 +17,9 @@ def generar_informe_hallazgos(metricas: dict, ruta_salida: str = "informes/halla
 > **Nota:** Este informe fue generado **automáticamente por el pipeline de ML** el {datetime.now().strftime('%Y-%m-%d a las %H:%M:%S')}.
 
 ## 1. Resumen Ejecutivo
-**Pregunta de negocio:** ¿Qué clientes tienen una alta probabilidad de incurrir en mora el próximo mes para priorizar aprobación, mitigación de cupo o cobranza preventiva?
+**Pregunta de negocio:** ¿Qué clientes titulares de tarjetas de crédito tienen una alta probabilidad de incumplir el pago del próximo mes para priorizar aprobación, mitigación de cupo o cobranza preventiva?
 
-Este documento analiza el desempeño del modelo **Random Forest Classifier** entrenado sobre el dataset `imodels/credit-card`. El modelo identifica algunas señales de riesgo, pero no debe automatizar por sí solo el rechazo de clientes porque su recall de mora es limitado.
+Este documento analiza el desempeño del modelo **Random Forest Classifier** entrenado sobre el dataset `imodels/credit-card`. El modelo identifica señales útiles de riesgo, pero no debe automatizar por sí solo el rechazo de clientes porque todavía deja algunos casos de mora sin detectar.
 
 ---
 
@@ -52,7 +52,7 @@ En la prueba, el modelo obtuvo **{metricas['confusion_matrix'][1, 1]} verdaderos
 
 ## 4. Recomendaciones Estratégicas
 1. **Ajuste del Umbral de Decisión:** Modificar el punto de corte probabilístico para incrementar el **Recall** antes del desembolso.
-2. **Balanceo de Clases:** Implementar `class_weight='balanced'` o sobremuestreo (SMOTE) en futuros reentrenamientos.
+2. **Balanceo de Clases:** El entrenamiento actual utiliza `class_weight='balanced'` para dar mayor peso a la clase minoritaria de clientes morosos.
 3. **Automatización:** Este informe se actualiza dinámicamente en cada ejecución del pipeline en GitHub Actions.
 """
     with open(ruta_salida, "w", encoding="utf-8") as f:
@@ -75,23 +75,28 @@ def ejecutar_pipeline():
     
     # 3. Comparación de configuraciones en una validación interna del train
     configuraciones = [
-        {"n_estimators": 50, "max_depth": 8},
-        {"n_estimators": 100, "max_depth": 10},
-        {"n_estimators": 100, "max_depth": 15},
+        {"n_estimators": 50, "max_depth": 8, "class_weight": "balanced"},
+        {"n_estimators": 100, "max_depth": 10, "class_weight": "balanced"},
+        {"n_estimators": 100, "max_depth": 15, "class_weight": "balanced"},
     ]
     comparacion = comparar_configuraciones(
         X_train, y_train, configuraciones=configuraciones, random_state=42
     )
-    configuracion_elegida = {"n_estimators": 100, "max_depth": 15}
+    configuracion_elegida = max(
+        comparacion,
+        key=lambda resultado: (resultado["f1"], resultado["recall"]),
+    )
 
     # 4. Entrenamiento final sobre todo el conjunto de entrenamiento
     n_estimators = configuracion_elegida["n_estimators"]
     max_depth = configuracion_elegida["max_depth"]
+    class_weight = configuracion_elegida["class_weight"]
     random_state = 42
     modelo = entrenar_modelo_random_forest(
         X_train, y_train, 
         n_estimators=n_estimators, 
         max_depth=max_depth, 
+        class_weight=class_weight,
         random_state=random_state
     )
 
@@ -176,6 +181,7 @@ Muestra de predictoras después del escalado (primeras 3 filas de train):
 Algoritmo: Random Forest Classifier
 n_estimators: {n_estimators}
 max_depth: {max_depth}
+class_weight: {class_weight}
 random_state: {random_state}
 Comparación en validación interna del train:
 {comparacion_txt}

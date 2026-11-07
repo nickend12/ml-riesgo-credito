@@ -1,8 +1,8 @@
 ==================================================
 INFORME DE EJECUCIÓN AUTOMÁTICA DEL PIPELINE DE ML
 ==================================================
-Fecha y Hora de Ejecución: 2026-11-07 22:27:08
-Duración Total: 11.49 segundos
+Fecha y Hora de Ejecución: 2026-11-07 23:15:15
+Duración Total: 14.44 segundos
 
 PREGUNTA DE NEGOCIO
 -------------------
@@ -45,20 +45,21 @@ Muestra de predictoras después del escalado (primeras 3 filas de train):
 ---------------------------
 Algoritmo: Random Forest Classifier
 n_estimators: 100
-max_depth: 15
+max_depth: 10
+class_weight: balanced
 random_state: 42
 Comparación en validación interna del train:
 - n_estimators=50, max_depth=8: recall=0.6193, F1=0.5533
 - n_estimators=100, max_depth=10: recall=0.6146, F1=0.5618
 - n_estimators=100, max_depth=15: recall=0.5723, F1=0.5547
-Configuración elegida: {'n_estimators': 100, 'max_depth': 15}
+Configuración elegida: {'n_estimators': 100, 'max_depth': 10, 'class_weight': 'balanced', 'recall': 0.6145710928319624, 'f1': 0.5617615467239527}
 
 4. MÉTRICAS DE EVALUACIÓN (TEST SET)
 -----------------------------------
-Exactitud (Accuracy):   0.7937
-Precisión (Precision):   0.5346
-Sensibilidad (Recall):   0.5451
-Puntuación F1 (F1-Score): 0.5398
+Exactitud (Accuracy):   0.7810
+Precisión (Precision):   0.5056
+Sensibilidad (Recall):   0.5968
+Puntuación F1 (F1-Score): 0.5474
 
 Artefactos Generados Automáticamente:
 - Gráfica Matriz de Confusión: informes/matriz_confusion.png

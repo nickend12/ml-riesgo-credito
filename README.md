@@ -55,7 +55,8 @@ Random Forest es un algoritmo de ensamble basado en múltiples Árboles de Decis
 
 ### Significado de los Parámetros Utilizados
 * `n_estimators=100`: Define que el bosque construirá 100 árboles de decisión independientes, logrando estabilidad en las predicciones.
-* `max_depth=15`: Limita la profundidad máxima de cada árbol a 15 niveles para capturar relaciones no lineales sin permitir árboles ilimitados.
+* `max_depth=10`: Limita la profundidad máxima de cada árbol a 10 niveles para capturar relaciones no lineales sin permitir árboles ilimitados.
+* `class_weight='balanced'`: Da mayor peso a la clase minoritaria (clientes que incurren en mora) para mejorar su detección.
 * `random_state=42`: Fija la semilla aleatoria para asegurar la reproducibilidad exacta en cualquier entorno de ejecución.
 * **Selección de configuración:** Se compararon `n_estimators` 50/100 y `max_depth` 8/10/15 mediante una validación estratificada interna del conjunto de entrenamiento. La prueba final se reservó para evaluar una sola vez la configuración elegida.
 
@@ -94,10 +95,10 @@ En la ejecución del conjunto de prueba (4.795 muestras no vistas durante el ent
 
 | Métrica | Valor obtenido | Interpretación de negocio |
 | :--- | :---: | :--- |
-| **Accuracy (Exactitud)** | **79,37 %** | Clasificación correcta general de clientes cumplidos y morosos. |
-| **Precision (Precisión)** | **53,46 %** | De cada 100 clientes marcados con riesgo de mora, aproximadamente 53 realmente incurrieron en impago. |
-| **Recall (Sensibilidad)** | **54,51 %** | Porcentaje de clientes morosos reales detectados a tiempo por el modelo. |
-| **F1-Score** | **53,98 %** | Balance armónico entre la precisión y la sensibilidad frente a la clase minoritaria. |
+| **Accuracy (Exactitud)** | **78,10 %** | Clasificación correcta general de clientes cumplidos y morosos. |
+| **Precision (Precisión)** | **50,56 %** | De cada 100 clientes marcados con riesgo de mora, aproximadamente 51 realmente incurrieron en impago. |
+| **Recall (Sensibilidad)** | **59,68 %** | Porcentaje de clientes morosos reales detectados a tiempo por el modelo. |
+| **F1-Score** | **54,74 %** | Balance armónico entre la precisión y la sensibilidad frente a la clase minoritaria. |
 
 ### Análisis Financiero de la Matriz de Confusión
 
@@ -229,18 +230,18 @@ observada en el dataset es **22,18 %**.
 Se entrenó un `RandomForestClassifier` con división estratificada y sin fuga de
 información. Sobre 4.795 clientes no vistos, el modelo obtuvo:
 
-* **Accuracy:** 79,37 %
-* **Precision:** 53,46 %; aproximadamente 53 de cada 100 alertas corresponden a
+* **Accuracy:** 78,10 %
+* **Precision:** 50,56 %; aproximadamente 51 de cada 100 alertas corresponden a
   clientes que realmente incurrieron en mora.
-* **Recall:** 54,51 %; detecta más de la mitad de los morosos, aunque todavía
+* **Recall:** 59,68 %; detecta cerca de seis de cada diez morosos, aunque todavía
   deja casos sin alertar.
-* **ROC-AUC:** 77,38 %, lo que confirma capacidad para ordenar los casos por
+* **ROC-AUC:** 77,44 %, lo que confirma capacidad para ordenar los casos por
   riesgo mejor que una clasificación aleatoria.
 
 El modelo utiliza `class_weight='balanced'` para compensar el desbalance entre
 clientes cumplidos y morosos. Esto reduce ligeramente la exactitud general, pero
-mejora la detección de la clase minoritaria: el recall sube de 34,30 % a 54,51 %
-y el F1-score de 45,40 % a 53,98 %. Para la cobranza preventiva, esta mejora es
+mejora la detección de la clase minoritaria: el recall sube de 34,30 % a 59,68 %
+y el F1-score de 45,40 % a 54,74 %. Para la cobranza preventiva, esta mejora es
 más relevante que maximizar únicamente la exactitud. Aun así, el modelo no es un
 filtro perfecto ni debe decidir por sí solo la aprobación o el rechazo de un cliente.
 
