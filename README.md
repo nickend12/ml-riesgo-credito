@@ -209,12 +209,12 @@ La ejecución final publicada en GitHub Actions terminó correctamente y dejó d
 
 ### Respuesta ejecutiva
 
-Los clientes que deben priorizarse son aquellos cuya combinación de historial de
-pagos (`pay_0` a `pay_6`), saldos facturados, montos pagados, límite de crédito y
-variables complementarias produce una probabilidad estimada alta de mora. El
-notebook no identifica a una persona por su nombre: asigna una probabilidad
-individual a cada registro evaluado y ordena los casos desde el mayor al menor
-riesgo.
+La respuesta de negocio no es afirmar que un cliente necesariamente incumplirá,
+sino identificar **a quién atender primero**. Para cada registro, el modelo
+combina el historial de pagos (`pay_0` a `pay_6`), los saldos facturados, los
+montos pagados y el límite de crédito, y entrega una probabilidad individual de
+mora. Esa probabilidad permite ordenar los casos y definir una acción de
+seguimiento.
 
 ### 1. Evidencia del análisis de datos
 
@@ -262,18 +262,41 @@ una alerta preventiva. En la aplicación Streamlit se puede ingresar la informac
 de un cliente y obtener su probabilidad estimada de mora para apoyar la decisión
 del área de riesgos.
 
-### Respuesta en palabras
+### 4. Caso de ejemplo para la decisión de negocio
 
-En palabras, los clientes que deben priorizarse son los **titulares de tarjetas
-de crédito cuya probabilidad individual de incumplir el próximo pago es alta**.
-El modelo identifica estos casos a partir de atrasos en el historial de pagos,
-saldos pendientes elevados, pagos bajos frente a las facturas y un uso alto del
-límite de crédito.
+Supongamos que llega este cliente a evaluación:
 
-Por lo tanto, los clientes con riesgo alto deben recibir cobranza preventiva y
-una revisión humana del cupo o de sus condiciones. Los clientes con riesgo bajo
-pueden continuar con el proceso normal, mientras que los casos intermedios deben
-mantenerse bajo seguimiento. El modelo ayuda a decidir **a quién atender
-primero**, pero no afirma que un grupo completo vaya a incumplir ni debe
-reemplazar la decisión humana o utilizarse para rechazar automáticamente a un
-cliente.
+| Característica | Valor ilustrativo |
+| :--- | :---: |
+| `limit_bal` | 50.000 |
+| `pay_0` | 2 meses de atraso |
+| `pay_2` | 1 mes de atraso |
+| Facturas recientes (`bill_amt1` a `bill_amt3`) | Saldos altos |
+| Pagos recientes (`pay_amt1` a `pay_amt3`) | Pagos bajos frente a las facturas |
+
+Al pasar estas características por el modelo, supongamos que la aplicación
+devuelve una **probabilidad estimada de mora de 68 %**. Como supera el umbral
+técnico del 50 %, el resultado sería:
+
+* **Tipo de riesgo:** alto.
+* **Decisión sugerida:** priorizar una llamada o recordatorio de cobranza
+  preventiva y realizar una revisión humana de las condiciones del cliente.
+* **Lo que no se puede afirmar:** que este cliente definitivamente incumplirá.
+
+Este ejemplo demuestra cómo se responde la pregunta de negocio: las señales de
+atrasos, saldos altos y pagos bajos hacen que el cliente sea un caso prioritario,
+pero la predicción sigue siendo probabilística. La precisión de **50,56 %**
+significa que, de cada 100 alertas de mora, aproximadamente 51 corresponden a
+clientes que realmente incumplen y cerca de 49 son falsas alarmas. El recall de
+**59,68 %** significa que el modelo detecta cerca de 6 de cada 10 clientes que
+realmente caen en mora. El accuracy de **78,10 %** resume los aciertos sobre
+clientes cumplidos y morosos, pero no garantiza que la predicción de un cliente
+particular sea correcta; el ROC-AUC de **77,44 %** indica que el modelo puede
+ordenar razonablemente los casos de menor a mayor riesgo.
+
+Por lo tanto, el modelo **sí sirve para priorizar la atención y el seguimiento**,
+especialmente en clientes con atrasos de una o más cuotas, saldos pendientes
+altos y pagos bajos. Sin embargo, con la precisión actual no es suficiente para
+rechazar o aprobar automáticamente a una persona. Los casos de riesgo alto deben
+pasar por revisión humana, los casos intermedios deben mantenerse bajo
+monitoreo y los casos de riesgo bajo pueden continuar con el proceso normal.
