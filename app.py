@@ -14,18 +14,26 @@ REPORTS = ROOT / "informes"
 MODEL_PATH = REPORTS / "modelo_riesgo.joblib"
 SUMMARY_PATH = REPORTS / "resumen_ejecucion.txt"
 CONFUSION_PATH = REPORTS / "matriz_confusion.png"
+THRESHOLD_CHART_PATH = REPORTS / "comparacion_umbrales.png"
+FINDINGS_PATH = REPORTS / "hallazgos.md"
 
 st.set_page_config(page_title="Simulador de riesgo", page_icon="💳", layout="wide")
 st_autorefresh(interval=2000, key="pipeline_file_watcher")
 
 
-def _signature() -> tuple[int, int]:
-    files = [MODEL_PATH, SUMMARY_PATH, CONFUSION_PATH]
+def _signature() -> tuple[int, ...]:
+    files = [
+        MODEL_PATH,
+        SUMMARY_PATH,
+        CONFUSION_PATH,
+        THRESHOLD_CHART_PATH,
+        FINDINGS_PATH,
+    ]
     return tuple(path.stat().st_mtime_ns if path.exists() else 0 for path in files)
 
 
 @st.cache_resource
-def load_bundle(signature: tuple[int, int]):
+def load_bundle(signature: tuple[int, ...]):
     if not MODEL_PATH.exists():
         return None
     return joblib.load(MODEL_PATH)
@@ -35,15 +43,22 @@ def read_metrics() -> dict[str, float]:
     if not SUMMARY_PATH.exists():
         return {}
     summary = SUMMARY_PATH.read_text(encoding="utf-8")
+    # Priorizar el bloque del umbral ajustado si existe en el resumen
+    bloque_objetivo = (
+        summary.split("[Umbral Ajustado")[1]
+        if "[Umbral Ajustado" in summary
+        else summary
+    )
     labels = {
         "Accuracy": "Exactitud (Accuracy)",
         "Precision": "Precisión (Precision)",
         "Recall": "Sensibilidad (Recall)",
         "F1": "Puntuación F1 (F1-Score)",
+        "F2": "Puntuación F2 (F2-Score)",
     }
     metrics = {}
     for name, label in labels.items():
-        match = re.search(rf"{re.escape(label)}:\s+([0-9.]+)", summary)
+        match = re.search(rf"{re.escape(label)}:\s+([0-9.]+)", bloque_objetivo)
         if match:
             metrics[name] = float(match.group(1))
     return metrics
@@ -78,10 +93,12 @@ model = bundle["model"]
 scaler = bundle["scaler"]
 features = bundle["features"]
 defaults = bundle["defaults"]
+umbral_optimo = float(bundle.get("umbral_optimo", 0.50))
 
 st.info(
-    "Los cambios en `main.py`, el modelo o los informes se reflejan después de ejecutar "
-    "`python main.py`; la aplicación detecta los nuevos artefactos automáticamente."
+    f"Los cambios en `main.py`, el modelo o los informes se reflejan después de ejecutar "
+    f"`python main.py`. **Umbral calibrado activo: `{umbral_optimo:.2f}`** "
+    f"(optimizado por F2-Score para minimizar Falsos Negativos)."
 )
 
 with st.form("risk_form"):
@@ -98,17 +115,28 @@ with st.form("risk_form"):
 if submitted:
     row = pd.DataFrame([values], columns=features)
     scaled_row = pd.DataFrame(scaler.transform(row), columns=features)
-    prediction = int(model.predict(scaled_row)[0])
     probability = float(model.predict_proba(scaled_row)[0, 1])
+    prediction = int(probability >= umbral_optimo)
 
-    if prediction == 1:
-        st.error(f"Riesgo alto de mora. Probabilidad estimada: {probability:.2%}")
+    if prediction == 0:
+        st.success(
+            f"🟢 Riesgo bajo de mora — Probabilidad estimada: {probability:.2%} "
+            f"(menor al umbral calibrado de {umbral_optimo:.2f}). Acción: Priorizar aprobación."
+        )
+    elif probability < 0.65:
+        st.warning(
+            f"🟡 Riesgo moderado de mora — Probabilidad estimada: {probability:.2%} "
+            f"(supera el umbral calibrado de {umbral_optimo:.2f}). Acción: Mitigación de cupo y monitoreo."
+        )
     else:
-        st.success(f"Riesgo bajo de mora. Probabilidad estimada: {probability:.2%}")
+        st.error(
+            f"🔴 Riesgo alto de mora — Probabilidad estimada: {probability:.2%} "
+            f"(umbral calibrado: {umbral_optimo:.2f}). Acción: Activar cobranza preventiva antes del corte."
+        )
 
 if metrics:
-    st.subheader("Métricas de la última ejecución")
-    metric_columns = st.columns(4)
+    st.subheader(f"Métricas de la última ejecución (Umbral = {umbral_optimo:.2f})")
+    metric_columns = st.columns(len(metrics))
     for column, (name, value) in zip(metric_columns, metrics.items()):
         column.metric(name, f"{value:.2%}")
 
@@ -122,13 +150,25 @@ if metrics:
         )
         st.line_chart(history_data.set_index("ejecucion"))
 
-if CONFUSION_PATH.exists():
-    st.subheader("Matriz de confusión")
-    st.image(
-        str(CONFUSION_PATH),
-        caption="Aciertos y errores del modelo en el conjunto de prueba",
-        width="stretch",
-    )
+if CONFUSION_PATH.exists() or THRESHOLD_CHART_PATH.exists():
+    st.subheader("Matrices de confusión y comparación de umbrales")
+    img_cols = st.columns(2)
+    if CONFUSION_PATH.exists():
+        img_cols[0].image(
+            str(CONFUSION_PATH),
+            caption="Matriz de confusión base (Umbral 0.50)",
+            width="stretch",
+        )
+    if THRESHOLD_CHART_PATH.exists():
+        img_cols[1].image(
+            str(THRESHOLD_CHART_PATH),
+            caption=f"Impacto del ajuste de umbral (0.50 vs {umbral_optimo:.2f})",
+            width="stretch",
+        )
+
+if FINDINGS_PATH.exists():
+    with st.expander("📊 Ver informe profundizado de hallazgos (hallazgos.md)", expanded=False):
+        st.markdown(FINDINGS_PATH.read_text(encoding="utf-8"))
 
 st.subheader("Último resumen generado")
 if SUMMARY_PATH.exists():
